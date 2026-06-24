@@ -16,6 +16,6 @@ spec:
     spec:
       containers:
       - name: spring-boot-app
-        image: stelabiju/ultimate-cicd:replaceImageTag
+        image: stelabiju/ultimate-cicd:11
         ports:
         - containerPort: 8080
