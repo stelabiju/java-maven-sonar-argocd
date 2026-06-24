@@ -1,10 +1,11 @@
 pipeline {
   agent {
     docker {
-      image 'maven:3.9.6-eclipse-temurin-21'
+      image 'jibin321/maven-docker-agent:v2'
       args '--user root -v /var/run/docker.sock:/var/run/docker.sock'
     }
   }
+
   
   stages {
     stage('Checkout') {
@@ -51,17 +52,29 @@ pipeline {
     steps {
         withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
             sh '''
-                git config --global --add safe.directory /var/lib/jenkins/.jenkins/workspace/jenkins-maven-sonar
-                git config user.email "stelabiju@gmail.com"
-                git config user.name "stelabiju"
+                echo "Current Directory:"
+                pwd
+
+                echo "Repository Contents:"
+                ls -la
+                git config --global --add safe.directory /var/lib/jenkins/workspace/Java_Maven
+                git config --global user.email "stelabiju@gmail.com"
+                git config --global user.name "stelabiju"
+
                 BUILD_NUMBER=${BUILD_NUMBER}
-                sed -i "s/replaceImageTag/${BUILD_NUMBER}/g" spring-boot-app-manifests/deployment.yml
+
+                sed -i "s|stelabiju/ultimate-cicd:.*|stelabiju/ultimate-cicd:${BUILD_NUMBER}|g" spring-boot-app-manifests/deployment.yml
+
+                git status
+
                 git add spring-boot-app-manifests/deployment.yml
-                git commit -m "Update deployment image to version ${BUILD_NUMBER}"
-                git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:main
+
+                git commit -m "Update deployment image to version ${BUILD_NUMBER}" || echo "No changes to commit"
+
+                git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME}.git HEAD:main
             '''
         }
-     }
-   }
+    }
+  }
  }
 }
