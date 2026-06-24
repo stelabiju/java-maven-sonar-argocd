@@ -57,7 +57,7 @@ pipeline {
                 echo "Repository Contents:"
                 ls -la
                 
-                # Fixed: Uses ${WORKSPACE} so Git safely recognizes the exact execution directory
+                # Fixes the dubious ownership error safely across dynamic workspaces
                 git config --global --add safe.directory "${WORKSPACE}"
                 
                 git config --global user.email "stelabiju@gmail.com"
@@ -73,7 +73,8 @@ pipeline {
 
                 git commit -m "Update deployment image to version ${BUILD_NUMBER}" || echo "No changes to commit"
 
-                git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME}.git HEAD:main
+                # Fixes the detached HEAD push ambiguity error by explicitly targeting the main branch ref
+                git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME}.git HEAD:refs/heads/main
             '''
         }
       }
