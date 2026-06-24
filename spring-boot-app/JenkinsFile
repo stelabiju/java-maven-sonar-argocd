@@ -6,7 +6,6 @@ pipeline {
     }
   }
 
-  
   stages {
     stage('Checkout') {
       steps {
@@ -45,11 +44,11 @@ pipeline {
       }
     }
     stage('Update Deployment File') {
-    environment {
+      environment {
         GIT_REPO_NAME = "java-maven-sonar-argocd"
         GIT_USER_NAME = "stelabiju"
-    }
-    steps {
+      }
+      steps {
         withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
             sh '''
                 echo "Current Directory:"
@@ -57,7 +56,10 @@ pipeline {
 
                 echo "Repository Contents:"
                 ls -la
-                git config --global --add safe.directory /var/lib/jenkins/workspace/Java_Maven
+                
+                # Fixed: Uses ${WORKSPACE} so Git safely recognizes the exact execution directory
+                git config --global --add safe.directory "${WORKSPACE}"
+                
                 git config --global user.email "stelabiju@gmail.com"
                 git config --global user.name "stelabiju"
 
@@ -74,7 +76,7 @@ pipeline {
                 git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME}.git HEAD:main
             '''
         }
+      }
     }
   }
- }
 }
