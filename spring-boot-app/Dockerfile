@@ -1,13 +1,26 @@
-# You can change this base image to anything else
-# But make sure to use the correct version of Java
-FROM adoptopenjdk/openjdk11:alpine-jre
+# Use a slim image for a smaller footprint
+FROM python:3.12-slim
 
-# Simply the artifact path
-ARG artifact=target/spring-boot-web.jar
+# Set environment variables to prevent Python from buffering stdout/stderr
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
 
 WORKDIR /opt/app
 
-COPY ${artifact} app.jar
+# Install system dependencies (e.g., if you use PostgreSQL later)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
 
-# This should not be changed
-ENTRYPOINT ["java","-jar","app.jar"]
+# Install python dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt gunicorn
+
+# Copy only necessary files
+COPY . .
+
+# Expose port
+EXPOSE 8000
+
+# Use Gunicorn to run the application (Point to your wsgi file)
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "test_django_pro.wsgi:application"]
